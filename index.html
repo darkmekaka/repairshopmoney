@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수선비 운영</title>
+    <style>
+        /* CSS는 이전과 동일하게 유지 */
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f5f7fa; margin: 0; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 480px; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        .header { background-color: #1e293b; color: white; padding: 25px; text-align: center; }
+        .input-section { padding: 20px; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .type-btn { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; background: #f8f9fa; }
+        .type-btn.active.income { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+        .type-btn.active.expense { background: #ffebee; color: #c62828; border-color: #c62828; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button.submit { width: 100%; padding: 15px; background: #1e293b; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>수선비 운영</h1>
+            <input type="month" id="month-picker" onchange="loadData()">
+        </div>
+        <div class="input-section">
+            <div class="btn-group">
+                <div class="type-btn active income" id="btn-inc" onclick="selectType('입금')">입금</div>
+                <div class="type-btn expense" id="btn-exp" onclick="selectType('출금')">출금</div>
+            </div>
+            <input type="date" id="date">
+            <select id="method"><option value="현금">현금</option><option value="계좌이체">계좌이체</option></select>
+            <input type="text" id="customer" placeholder="고객님 성함">
+            <input type="text" id="details" placeholder="수선내역">
+            <input type="number" id="amount" placeholder="금액">
+            <button class="submit" onclick="register()">등록하기</button>
+        </div>
+        <div id="list" style="padding:20px;"></div>
+    </div>
+    <script>
+        // ★★★ 여기에 아래 3단계에서 받을 구글 앱스 스크립트 URL을 넣으세요 ★★★
+        const API_URL = "여기에_웹앱_URL을_붙여넣으세요";
+        
+        let type = '입금';
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('month-picker').value = new Date().toISOString().slice(0,7);
+
+        function selectType(t) {
+            type = t;
+            document.getElementById('btn-inc').classList.toggle('active', t==='입금');
+            document.getElementById('btn-exp').classList.toggle('active', t==='출금');
+        }
+
+        async function register() {
+            const data = {
+                date: document.getElementById('date').value,
+                type: type,
+                method: document.getElementById('method').value,
+                customer: document.getElementById('customer').value,
+                details: document.getElementById('details').value,
+                amount: document.getElementById('amount').value
+            };
+            await fetch(API_URL, {method:'POST', body:JSON.stringify(data)});
+            alert('등록 완료'); loadData();
+        }
+
+        async function loadData() {
+            const month = document.getElementById('month-picker').value;
+            const res = await fetch(`${API_URL}?month=${month}`);
+            const data = await res.json();
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+            data.items.forEach(i => {
+                list.innerHTML += `<div style="border-bottom:1px solid #eee; padding:10px 0;"><b>${i.customer}</b><br>${i.details} / ${i.amount}원</div>`;
+            });
+        }
+        loadData();
+    </script>
+</body>
+</html>
